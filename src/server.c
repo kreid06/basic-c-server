@@ -20,7 +20,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Attach socket to the port
+    // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
@@ -30,7 +30,7 @@ int main() {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
-    // Bind the socket to the address
+    // Bind the socket to the network address and port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
@@ -44,15 +44,19 @@ int main() {
 
     printf("Server is listening on port %d\n", PORT);
 
-    // Accept incoming connection
+    // Accept an incoming connection
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
     }
 
-    // Read data from the client
-    int valread = read(new_socket, buffer, BUFFER_SIZE);
-    printf("Received data: %s\n", buffer);
+    // Read messages from the client and log them
+    int valread;
+    while ((valread = read(new_socket, buffer, BUFFER_SIZE)) > 0) {
+        buffer[valread] = '\0'; // Null-terminate the received string
+        printf("Received message: %s\n", buffer);
+        memset(buffer, 0, BUFFER_SIZE); // Clear the buffer
+    }
 
     // Close the socket
     close(new_socket);
